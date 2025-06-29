@@ -105,11 +105,11 @@ RUN bash -c "$(curl -fsSL https://raw.github.com/xicodomingues/francinette/maste
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || true
 RUN echo "source $HOME/.oh-my-zsh/oh-my-zsh.sh" >> $HOME/.zshrc
 
-# Add these lines to your Dockerfile
+# remove line:112 and line:113 if linux is 64bit
 RUN cd /tmp && \
     git clone https://github.com/cacharle/c_formatter_42 && \
     cd c_formatter_42 && \
-    mv /data/clang-format-linux /data/clang-format-linux_64bit && \
+    mv /data/clang-format-linux /data/clang-format-linux_64bit && \ 
     mv /data/clang-format-darwin-arm64 /data/clang-format-linux && \
     pip3 install -e .
 
