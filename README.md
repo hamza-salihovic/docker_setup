@@ -5,5 +5,5 @@ Make sure you are in the root directory of the project you want to run in a cont
 Download the .devcontainer directory into the root of your project with the following command:
 
 ```c
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/hamza-salihovic/docker_setup/refs/heads/main/install.sh?token=GHSAT0AAAAAAC5FHS45KI6GNNW7O6RENMMQ2DBCJNQ)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/hamza-salihovic/docker_setup/refs/heads/main/install.sh?token=GHSAT0AAAAAAC5FHS45BD2A4GJ5IZSMNRTG2DBEC2A)"
 ```
