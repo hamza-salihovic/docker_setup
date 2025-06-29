@@ -105,13 +105,12 @@ RUN bash -c "$(curl -fsSL https://raw.github.com/xicodomingues/francinette/maste
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || true
 RUN echo "source $HOME/.oh-my-zsh/oh-my-zsh.sh" >> $HOME/.zshrc
 
-# remove line:112 and line:113 if linux is 64bit
-RUN cd /tmp && \
-    git clone https://github.com/cacharle/c_formatter_42 && \
-    cd c_formatter_42 && \
-    mv c_formatter_42/data/clang-format-linux c_formatter_42/data/clang-format-linux_64bit && \
-    mv c_formatter_42/data/clang-format-darwin c_formatter_42/data/clang-format-linux && \
-    pip3 install -e .
+# Install c_formatter_42 and fix the binary compatibility issue
+RUN python3 -m pip install c_formatter_42 && \
+    apt-get update && apt-get install -y clang-format file && \
+    cp /usr/bin/clang-format /opt/venv/lib/python3.10/site-packages/c_formatter_42/data/clang-format-linux && \
+    chmod +x /opt/venv/lib/python3.10/site-packages/c_formatter_42/data/clang-format-linux && \
+    apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Optional: Clean up the cloned repository
 RUN rm -rf /tmp/c_formatter_42
