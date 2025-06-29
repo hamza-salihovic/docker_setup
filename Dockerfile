@@ -110,7 +110,7 @@ RUN cd /tmp && \
     git clone https://github.com/cacharle/c_formatter_42 && \
     cd c_formatter_42 && \
     mv c_formatter_42/data/clang-format-linux c_formatter_42/data/clang-format-linux_64bit && \
-    mv c_formatter_42/data/clang-format-darwin-arm64 c_formatter_42/data/clang-format-linux && \
+    mv c_formatter_42/data/clang-format-darwin c_formatter_42/data/clang-format-linux && \
     pip3 install -e .
 
 # Optional: Clean up the cloned repository
