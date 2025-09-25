@@ -101,6 +101,9 @@ RUN cd $HOME \
 # Install francinette
 RUN bash -c "$(curl -fsSL https://raw.github.com/xicodomingues/francinette/master/bin/install.sh)"
 
+# Add .specstory/ to .gitignore if not already present
+RUN grep -q ".specstory/" .gitignore || echo ".specstory/" >> .gitignore
+
 # Install oh-my-zsh
 RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || true
 RUN echo "source $HOME/.oh-my-zsh/oh-my-zsh.sh" >> $HOME/.zshrc
@@ -118,4 +121,5 @@ RUN rm -rf /tmp/c_formatter_42
 # Set the working directory in the container
 WORKDIR /app
 
-CMD ["/bin/zsh"]
+# Add .specstory/ to .gitignore if not already present, then start zsh
+CMD ["/bin/bash", "-c", "grep -q '.specstory/' .gitignore || echo '.specstory/' >> .gitignore; exec /bin/zsh"]

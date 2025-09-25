@@ -1,56 +1,57 @@
 {
-    "name": "42-Docker-DevEnv",
-    "build": {
-        "dockerfile": "Dockerfile"
-    },
-    "runArgs": ["--privileged"],
-    "containerEnv": {
-    "WAKATIME_API_KEY": "${localEnv:WAKATIME_API_KEY}"
-    },
-    "customizations": {
-        "vscode": {
-            "settings": {
-                "terminal.integrated.shell.linux": "/bin/zsh",
-                "[c]": {
-                    "editor.defaultFormatter": "keyhr.42-c-format"
-                },
-                "editor.formatOnSave": true
-            },
-            "extensions": [
-                "ms-vscode.cpptools-extension-pack", //C/C++ expansion
-                "ms-vscode.cpptools",  //C/C++
-                // "llvm-vs-code-extensions.vscode-clangd", // Alternative language server for C/C++
-                "ms-python.python",
-                "github.copilot",
-                "vadimcn.vscode-lldb", // Improved debugger features
-                "eamodio.gitlens", // Powerful git UI and visualizations
-                "bbenoist.togglehs", // F4 to jump between header and source files
-                "ms-vscode.makefile-tools", // IntelliSense for Makefile
-                "timonwong.shellcheck", // Linter for Shell scripts
-                "esbenp.prettier-vscode", // Code formatter for Markdown, YAML and more
-                "kube.42header", // Ctrl + Alt + H to insert 42 Header
-                "DoKca.42-ft-count-line", // Display function line count
-                "ms-vsliveshare.vsliveshare", // Real-time collaboration
-                "dqisme.sync-scroll", // Scroll multiple editors simultaneously
-                "uctakeoff.vscode-counter", // Count lines of code
-                "tomoki1207.pdf", // Display PDF files in VS Code
-                "keyhr.42-c-format", //42 Format
-                "WakaTime.vscode-wakatime", // WakaTime time tracking extension
-                "saoudrizwan.claude-dev",       //claude
-                "streetsidesoftware.code-spell-checker",        //spell checker
-                "ms-vscode.vscode-websearchforcopilot",         //websearch for copilot
-                "ms-vscode.cpptools-themes", //themes
-                "aaron-bond.better-comments", //Better Comments
-                "specstory.specstory-vscode",
-                "ms-python.vscode-pylance"
-            ]
-        }
-    },
-    "initializeCommand": "mkdir -p ${env:HOME}/.ssh && touch ${env:HOME}/.gitconfig ${env:HOME}/.zshrc",
-    "mounts": [
-        "source=${env:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
-        "source=${env:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached",
-        "source=${env:HOME}/.zshrc,target=/root/.zshrc,type=bind,consistency=cached"
-    ],
-    "postCreateCommand": "bash .devcontainer/setup-gdb.sh"
+	"name": "42-Docker-DevEnv",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"runArgs": ["--privileged"],
+	"containerEnv": {
+	"WAKATIME_API_KEY": "${localEnv:WAKATIME_API_KEY}"
+	},
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.shell.linux": "/bin/zsh",
+				"[c]": {
+					"editor.defaultFormatter": "keyhr.42-c-format"
+				},
+				"editor.formatOnSave": false
+			},
+			"extensions": [
+				"ms-vscode.cpptools-extension-pack",              // C/C++ expansion
+				"ms-python.python",
+				"github.copilot",
+				"vadimcn.vscode-lldb",                            // Improved debugger features
+				"eamodio.gitlens",                                // Powerful git UI and visualizations
+				"bbenoist.togglehs",                              // F4 to jump between header and source files
+				"ms-vscode.makefile-tools",                       // IntelliSense for Makefile
+				"timonwong.shellcheck",                           // Linter for Shell scripts
+				"esbenp.prettier-vscode",                         // Code formatter for Markdown, YAML and more
+				"kube.42header",                                  // Ctrl + Alt + H to insert 42 Header
+				"DoKca.42-ft-count-line",                         // Display function line count
+				"ms-vsliveshare.vsliveshare",                     // Real-time collaboration
+				"dqisme.sync-scroll",                             // Scroll multiple editors simultaneously
+				"uctakeoff.vscode-counter",                       // Count lines of code
+				"tomoki1207.pdf",                                 // Display PDF files in VS Code
+				"keyhr.42-c-format",                              // 42 Format
+				"WakaTime.vscode-wakatime",                       // WakaTime time tracking extension
+				"saoudrizwan.claude-dev",                         // claude
+				"streetsidesoftware.code-spell-checker",          // spell checker
+				"ms-vscode.vscode-websearchforcopilot",           // websearch for copilot
+				"ms-vscode.cpptools-themes",                      // themes
+				"aaron-bond.better-comments",                     // Better Comments
+				"specstory.specstory-vscode",                     // Save, export, search and share AI chat history from GitHub Copilot and Cursor
+				"ms-python.vscode-pylance",
+				"kilocode.kilo-code",
+				"llvm-vs-code-extensions.vscode-clangd",          // language server for C/C++
+				"alpha912.codebase-md"                            // codebase as markdown
+			]
+		}
+	},
+	"initializeCommand": "mkdir -p ${env:HOME}/.ssh && touch ${env:HOME}/.gitconfig ${env:HOME}/.zshrc",
+	"mounts": [
+		"source=${env:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
+		"source=${env:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached",
+		"source=${env:HOME}/.zshrc,target=/root/.zshrc,type=bind,consistency=cached"
+	],
+	"postCreateCommand": "bash .devcontainer/setup-gdb.sh"
 }
