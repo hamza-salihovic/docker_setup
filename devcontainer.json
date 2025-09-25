@@ -14,7 +14,8 @@
 				"[c]": {
 					"editor.defaultFormatter": "keyhr.42-c-format"
 				},
-				"editor.formatOnSave": false
+				"editor.formatOnSave": false,
+				"terminal.integrated.sideBar.location": "right"
 			},
 			"extensions": [
 				"ms-vscode.cpptools-extension-pack",              // C/C++ expansion

@@ -1,0 +1,109 @@
+version: '3.8'
+
+x-common-variables: &common-variables
+  COLORTERM: truecolor
+  TERM: xterm-256color
+
+x-common-volumes: &common-volumes
+  - .:/workspace:cached
+  - ~/.ssh:/root/.ssh:ro
+  - ~/.gitconfig:/root/.gitconfig:ro
+  - ccache-data:/cache/ccache
+  - build-cache:/workspace/build
+
+services:
+  # ARM64 Development Container (Primary for M4 Pro)
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.optimized
+      platforms:
+        - linux/arm64
+      cache_from:
+        - type=local,src=/tmp/.buildx-cache
+      cache_to:
+        - type=local,dest=/tmp/.buildx-cache,mode=max
+    image: 42-dev:arm64
+    container_name: 42-dev-arm64
+    platform: linux/arm64
+    hostname: dev-arm64
+    stdin_open: true
+    tty: true
+    privileged: true
+    network_mode: host
+    environment:
+      <<: *common-variables
+      DOCKER_PLATFORM: arm64
+    volumes: *common-volumes
+    cap_add:
+      - SYS_PTRACE
+      - NET_ADMIN
+      - NET_RAW
+    security_opt:
+      - seccomp:unconfined
+      - apparmor:unconfined
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  # x86_64 Testing Container (Campus Compatibility)
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile.optimized
+      platforms:
+        - linux/amd64
+    image: 42-dev:amd64
+    container_name: 42-dev-amd64
+    platform: linux/amd64
+    hostname: dev-amd64
+    stdin_open: true
+    tty: true
+    privileged: true
+    environment:
+      <<: *common-variables
+      DOCKER_PLATFORM: amd64
+    volumes: *common-volumes
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+
+  # Automated Testing Service
+  tester:
+    image: 42-dev:${PLATFORM:-arm64}
+    container_name: 42-tester
+    platform: linux/${PLATFORM:-arm64}
+    working_dir: /workspace
+    environment:
+      <<: *common-variables
+      CI: true
+    volumes:
+      - .:/workspace:ro
+      - test-results:/results
+    command: ["/bin/bash", "-c", "./run-tests.sh"]
+    
+  # Static Analysis Service
+  analyzer:
+    image: 42-dev:${PLATFORM:-arm64}
+    container_name: 42-analyzer
+    platform: linux/${PLATFORM:-arm64}
+    working_dir: /workspace
+    volumes:
+      - .:/workspace:ro
+      - analysis-reports:/reports
+    command: ["/bin/bash", "-c", "./run-analysis.sh"]
+
+volumes:
+  ccache-data:
+    driver: local
+  build-cache:
+    driver: local
+  test-results:
+    driver: local
+  analysis-reports:
+    driver: local

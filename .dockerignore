@@ -1,0 +1,98 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+*.md
+README*
+LICENSE
+CHANGELOG*
+docs/
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+build/
+dist/
+*.o
+*.a
+*.so
+*.out
+*.exe
+
+# Test files
+test/
+tests/
+*_test.c
+*_test.cpp
+*.test
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.pid
+*.cache
+
+# Docker files (we don't want to copy these into the container)
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Scripts (mounted as volumes instead)
+scripts/
+
+# Environment files
+.env
+.env.*
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Node modules (if any)
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Archive files
+*.tar
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Core dumps
+core
+core.*

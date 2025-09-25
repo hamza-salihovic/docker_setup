@@ -1,0 +1,289 @@
+# Multi-stage build for optimized caching and smaller image size
+# Build with: docker buildx build --platform linux/arm64,linux/amd64 -t dev-env:latest .
+
+# ============================================
+# Stage 1: Base system with package caching
+# ============================================
+FROM --platform=$TARGETPLATFORM ubuntu:22.04 AS base
+
+ARG TARGETPLATFORM
+ARG BUILDPLATFORM
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Enable package caching
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    apt-get update && apt-get install -y \
+    # Essential build tools
+    build-essential \
+    cmake \
+    ninja-build \
+    ccache \
+    pkg-config \
+    # Version control
+    git \
+    # System utilities
+    sudo \
+    curl \
+    wget \
+    gnupg \
+    software-properties-common \
+    # Shell and terminal
+    zsh \
+    tmux \
+    # Python for tools
+    python3 \
+    python3-venv \
+    python3-pip \
+    # Libraries for graphics and system programming
+    libreadline-dev \
+    libreadline8 \
+    xorg \
+    libxext-dev \
+    zlib1g-dev \
+    libbsd-dev \
+    libcmocka-dev \
+    # Networking tools for system programming
+    net-tools \
+    iproute2 \
+    iputils-ping \
+    tcpdump \
+    netcat-openbsd \
+    socat \
+    iperf3 \
+    wireshark-tshark \
+    # System debugging tools
+    strace \
+    ltrace \
+    gdb \
+    lldb \
+    valgrind \
+    # Documentation
+    man-db \
+    manpages-dev \
+    manpages-posix-dev
+
+# ============================================
+# Stage 2: Compiler toolchain
+# ============================================
+FROM base AS toolchain
+
+# Add LLVM repository for latest clang
+RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - && \
+    add-apt-repository "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main"
+
+# Install compilers with specific versions
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt \
+    apt-get update && apt-get install -y \
+    # GCC toolchain
+    gcc-11 \
+    g++-11 \
+    gcc-12 \
+    g++-12 \
+    # Clang toolchain
+    clang-17 \
+    clang-tools-17 \
+    clangd-17 \
+    clang-format-17 \
+    clang-tidy-17 \
+    lldb-17 \
+    lld-17 \
+    # Static analysis tools
+    cppcheck \
+    iwyu
+
+# Configure compiler alternatives
+RUN update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 && \
+    update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-11 100 && \
+    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 100 && \
+    update-alternatives --install /usr/bin/clangd clangd /usr/bin/clangd-17 100 && \
+    update-alternatives --install /usr/bin/clang-format clang-format /usr/bin/clang-format-17 100
+
+# ============================================
+# Stage 3: Build custom tools
+# ============================================
+FROM toolchain AS builder
+
+WORKDIR /tmp
+
+# Build latest Valgrind (3.22.0) with better ARM64 support
+RUN wget https://sourceware.org/pub/valgrind/valgrind-3.22.0.tar.bz2 && \
+    tar -xjf valgrind-3.22.0.tar.bz2 && \
+    cd valgrind-3.22.0 && \
+    ./configure --prefix=/usr/local && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && rm -rf valgrind-3.22.0*
+
+# Build latest GNU Make (4.4.1)
+RUN wget https://ftp.gnu.org/gnu/make/make-4.4.1.tar.gz && \
+    tar -xzf make-4.4.1.tar.gz && \
+    cd make-4.4.1 && \
+    ./configure --prefix=/usr/local && \
+    make -j$(nproc) && \
+    make install && \
+    cd .. && rm -rf make-4.4.1*
+
+# ============================================
+# Stage 4: 42 School specific tools
+# ============================================
+FROM builder AS school-tools
+
+# Create Python virtual environment for 42 tools
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+# Install Python-based 42 tools
+RUN pip install --no-cache-dir \
+    --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir \
+    norminette \
+    c_formatter_42
+
+# Install MLX library
+RUN git clone https://github.com/42Paris/minilibx-linux.git /tmp/mlx && \
+    cd /tmp/mlx && \
+    make && \
+    cp mlx.h /usr/local/include/ && \
+    cp libmlx.a /usr/local/lib/ && \
+    cd / && rm -rf /tmp/mlx
+
+# Install francinette testing framework
+RUN curl -fsSL https://raw.github.com/xicodomingues/francinette/master/bin/install.sh | bash || true
+
+# ============================================
+# Stage 5: Final image with development setup
+# ============================================
+FROM toolchain AS final
+
+# Copy built tools from builder stage
+COPY --from=builder /usr/local /usr/local
+
+# Copy 42 School tools
+COPY --from=school-tools /opt/venv /opt/venv
+COPY --from=school-tools /usr/local/include/mlx.h /usr/local/include/
+COPY --from=school-tools /usr/local/lib/libmlx.a /usr/local/lib/
+COPY --from=school-tools /root/.local /root/.local
+
+# Set environment variables
+ENV PATH="/opt/venv/bin:/usr/local/bin:$PATH"
+ENV LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH"
+ENV CCACHE_DIR="/cache/ccache"
+ENV CCACHE_MAXSIZE="5G"
+
+# Configure ccache
+RUN mkdir -p /cache/ccache && \
+    ccache --set-config=cache_dir=/cache/ccache && \
+    ccache --set-config=max_size=5G && \
+    ccache --set-config=compression=true && \
+    ccache --set-config=compression_level=6
+
+# Create compiler wrapper scripts for ccache
+RUN mkdir -p /usr/local/bin && \
+    echo '#!/bin/sh\nexec ccache /usr/bin/gcc "$@"' > /usr/local/bin/ccache-gcc && \
+    echo '#!/bin/sh\nexec ccache /usr/bin/g++ "$@"' > /usr/local/bin/ccache-g++ && \
+    echo '#!/bin/sh\nexec ccache /usr/bin/clang "$@"' > /usr/local/bin/ccache-clang && \
+    echo '#!/bin/sh\nexec ccache /usr/bin/clang++ "$@"' > /usr/local/bin/ccache-clang++ && \
+    chmod +x /usr/local/bin/ccache-*
+
+# Install oh-my-zsh and configure shell
+RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" || true && \
+    git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting && \
+    sed -i 's/plugins=(git)/plugins=(git zsh-autosuggestions zsh-syntax-highlighting docker)/' ~/.zshrc
+
+# Add useful aliases and environment setup
+RUN echo '# Compiler aliases with ccache' >> ~/.zshrc && \
+    echo "alias gcc='ccache-gcc'" >> ~/.zshrc && \
+    echo "alias g++='ccache-g++'" >> ~/.zshrc && \
+    echo "alias clang='ccache-clang'" >> ~/.zshrc && \
+    echo "alias clang++='ccache-clang++'" >> ~/.zshrc && \
+    echo '' >> ~/.zshrc && \
+    echo '# Development aliases' >> ~/.zshrc && \
+    echo "alias ll='ls -la'" >> ~/.zshrc && \
+    echo "alias valgrind-full='valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose'" >> ~/.zshrc && \
+    echo "alias norm='norminette'" >> ~/.zshrc && \
+    echo "alias format='c_formatter_42'" >> ~/.zshrc && \
+    echo "alias make='make -j\$(nproc)'" >> ~/.zshrc && \
+    echo '' >> ~/.zshrc && \
+    echo '# Network debugging' >> ~/.zshrc && \
+    echo "alias ports='netstat -tulanp'" >> ~/.zshrc && \
+    echo "alias listen='lsof -i -P | grep LISTEN'" >> ~/.zshrc && \
+    echo '' >> ~/.zshrc && \
+    echo '# Quick compile' >> ~/.zshrc && \
+    echo 'function qcc() {' >> ~/.zshrc && \
+    echo '    gcc -Wall -Wextra -Werror -g3 -fsanitize=address "$@"' >> ~/.zshrc && \
+    echo '}' >> ~/.zshrc && \
+    echo '' >> ~/.zshrc && \
+    echo 'function qcpp() {' >> ~/.zshrc && \
+    echo '    g++ -Wall -Wextra -Werror -g3 -fsanitize=address "$@"' >> ~/.zshrc && \
+    echo '}' >> ~/.zshrc && \
+    echo '' >> ~/.zshrc && \
+    echo '# Show ccache stats on shell start' >> ~/.zshrc && \
+    echo 'ccache -s | head -n 5' >> ~/.zshrc
+
+# Configure GDB with enhanced settings
+RUN echo '# GDB Dashboard configuration' > ~/.gdbinit && \
+    echo 'set disassembly-flavor intel' >> ~/.gdbinit && \
+    echo 'set print pretty on' >> ~/.gdbinit && \
+    echo 'set print array on' >> ~/.gdbinit && \
+    echo 'set print array-indexes on' >> ~/.gdbinit && \
+    echo 'set history save on' >> ~/.gdbinit && \
+    echo 'set history size 10000' >> ~/.gdbinit && \
+    echo 'set history filename ~/.gdb_history' >> ~/.gdbinit && \
+    echo '' >> ~/.gdbinit && \
+    echo '# Better debugging experience' >> ~/.gdbinit && \
+    echo 'set pagination off' >> ~/.gdbinit && \
+    echo 'set confirm off' >> ~/.gdbinit && \
+    echo 'set verbose off' >> ~/.gdbinit && \
+    echo '' >> ~/.gdbinit && \
+    echo '# Custom commands' >> ~/.gdbinit && \
+    echo 'define hook-stop' >> ~/.gdbinit && \
+    echo '    info registers' >> ~/.gdbinit && \
+    echo '    x/10i $pc' >> ~/.gdbinit && \
+    echo '    info locals' >> ~/.gdbinit && \
+    echo '    backtrace 3' >> ~/.gdbinit && \
+    echo 'end' >> ~/.gdbinit && \
+    echo '' >> ~/.gdbinit && \
+    echo '# Useful aliases' >> ~/.gdbinit && \
+    echo 'alias -a xi = x/10i' >> ~/.gdbinit && \
+    echo 'alias -a xc = x/32c' >> ~/.gdbinit && \
+    echo 'alias -a xs = x/8s' >> ~/.gdbinit && \
+    echo 'alias -a xw = x/8wx' >> ~/.gdbinit
+
+# Set working directory
+WORKDIR /workspace
+
+# Create startup script
+RUN printf '#!/bin/bash\n\
+set -e\n\
+\n\
+# Mount check for important volumes\n\
+if [ ! -d "/cache/ccache" ]; then\n\
+    mkdir -p /cache/ccache\n\
+    ccache --set-config=cache_dir=/cache/ccache\n\
+fi\n\
+\n\
+# Update git safe directory\n\
+git config --global --add safe.directory /workspace\n\
+\n\
+# Check architecture\n\
+echo "==================================="\n\
+echo "Docker Development Environment"\n\
+echo "Architecture: $(uname -m)"\n\
+echo "Platform: ${TARGETPLATFORM}"\n\
+echo "Compiler cache: $(ccache -s 2>/dev/null | grep -i \"cache hit rate\" || echo \"not initialized\")"\n\
+echo "==================================="\n\
+\n\
+# Execute command or start shell\n\
+if [ $# -eq 0 ]; then\n\
+    exec /bin/zsh\n\
+else\n\
+    exec "$@"\n\
+fi\n' > /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["/bin/zsh"]

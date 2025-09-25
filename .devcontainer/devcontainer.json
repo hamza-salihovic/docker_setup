@@ -1,0 +1,128 @@
+{
+    "name": "42 C/C++ Development",
+    "dockerComposeFile": "../docker-compose.yml",
+    "service": "dev",
+    "workspaceFolder": "/workspace",
+    "shutdownAction": "stopCompose",
+    
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "terminal.integrated.profiles.linux": {
+                    "zsh": {
+                        "path": "/bin/zsh",
+                        "icon": "terminal-linux"
+                    }
+                },
+                
+                // C/C++ Settings
+                "C_Cpp.default.compilerPath": "/usr/bin/clang",
+                "C_Cpp.default.cStandard": "c11",
+                "C_Cpp.default.cppStandard": "c++17",
+                "C_Cpp.default.intelliSenseMode": "linux-clang-arm64",
+                "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, TabWidth: 4, UseTab: Always }",
+                
+                // clangd settings (better than Microsoft C/C++)
+                "clangd.enabled": true,
+                "clangd.arguments": [
+                    "--background-index",
+                    "--clang-tidy",
+                    "--header-insertion=iwyu",
+                    "--completion-style=detailed",
+                    "--function-arg-placeholders",
+                    "--fallback-style=google"
+                ],
+                
+                // Format on save
+                "[c]": {
+                    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+                    "editor.formatOnSave": true
+                },
+                "[cpp]": {
+                    "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd",
+                    "editor.formatOnSave": true
+                },
+                
+                // Debugging
+                "debug.onTaskErrors": "debugAnyway",
+                
+                // File associations
+                "files.associations": {
+                    "*.h": "c",
+                    "*.hpp": "cpp",
+                    "Makefile": "makefile"
+                },
+                
+                // Terminal settings
+                "terminal.integrated.sideBar.location": "right"
+            },
+            
+            "extensions": [
+                // Core C/C++ Development
+                "ms-vscode.cpptools-extension-pack",
+                "llvm-vs-code-extensions.vscode-clangd",
+                "ms-vscode.cmake-tools",
+                "ms-vscode.makefile-tools",
+                
+                // Docker Support
+                "ms-vscode-remote.remote-containers",
+                "ms-azuretools.vscode-docker",
+                
+                // Debugging
+                "vadimcn.vscode-lldb",
+                "webfreak.debug",
+                
+                // 42 School Specific
+                "kube.42header",
+                "keyhr.42-c-format",
+                "DoKca.42-ft-count-line",
+                
+                // Code Quality
+                "streetsidesoftware.code-spell-checker",
+                "aaron-bond.better-comments",
+                "jbenden.c-cpp-flylint",
+                "cschlosser.doxdocgen",
+                
+                // Productivity
+                "github.copilot",
+                "eamodio.gitlens",
+                "formulahendry.code-runner",
+                "tomoki1207.pdf",
+                "bbenoist.togglehs",
+                
+                // System Programming
+                "slevesque.vscode-hexdump",
+                "13xforever.language-x86-64-assembly",
+                
+                // Shell and Scripts
+                "timonwong.shellcheck",
+                
+                // Optional but useful
+                "WakaTime.vscode-wakatime",
+                "ms-vsliveshare.vsliveshare",
+                "esbenp.prettier-vscode",
+                "uctakeoff.vscode-counter"
+            ]
+        }
+    },
+    
+    "containerEnv": {
+        "WAKATIME_API_KEY": "${localEnv:WAKATIME_API_KEY}"
+    },
+    
+    "mounts": [
+        "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached,readonly",
+        "source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached,readonly"
+    ],
+    
+    "runArgs": [
+        "--cap-add=SYS_PTRACE",
+        "--cap-add=NET_ADMIN",
+        "--security-opt=seccomp:unconfined",
+        "--privileged"
+    ],
+    
+    "postCreateCommand": "git config --global --add safe.directory /workspace && ccache -s",
+    "remoteUser": "root"
+}
