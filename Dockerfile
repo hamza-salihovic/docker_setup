@@ -1,13 +1,13 @@
-# Start from Ubuntu 22.04 (Jammy Jellyfish)
-FROM ubuntu:22.04
+# Start from Ubuntu 22.04 (Jammy Jellyfish) for x86_64
+FROM --platform=linux/amd64 ubuntu:22.04
 
-# Add LLVM and GCC repositories
+# Add LLVM and GCC repositories for x86_64
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive && apt-get -y install \
     wget \
     gnupg \
     software-properties-common \
     && wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
-    && add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-12 main" \
+    && add-apt-repository "deb [arch=amd64] http://apt.llvm.org/jammy/ llvm-toolchain-jammy main" \
     && add-apt-repository ppa:ubuntu-toolchain-r/test
 
 # Update the system and install utils
@@ -23,10 +23,10 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     clang-12 \
     lldb-12 \
     gdb \
-    gcc-11=11.4.0-1ubuntu1~22.04 \
-    g++-11=11.4.0-1ubuntu1~22.04 \
-    gcc-10=10.5.0-1ubuntu1~22.04 \
-    g++-10=10.5.0-1ubuntu1~22.04 \
+    gcc-11 \
+    g++-11 \
+    gcc-10 \
+    g++-10 \
     zsh \
     git \
     wget \
@@ -49,32 +49,32 @@ RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100 \
     && update-alternatives --install /usr/bin/cc cc /usr/bin/clang-12 100 \
     && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++-12 100
 
-# Valgrind 3.18.1
+# Valgrind 3.18.1 (x86_64 compatible)
 RUN wget https://sourceware.org/pub/valgrind/valgrind-3.18.1.tar.bz2 \
     && tar -xjf valgrind-3.18.1.tar.bz2 \
     && cd valgrind-3.18.1 \
-    && ./configure \
+    && ./configure --host=x86_64-linux-gnu \
     && make \
     && make install \
     && sudo ldconfig \
     && cd .. \
     && rm -rf valgrind-3.18.1*
 
-# Make 4.3
+# Make 4.3 (x86_64 compatible)
 RUN wget http://ftp.gnu.org/gnu/make/make-4.3.tar.gz \
     && tar -xvzf make-4.3.tar.gz \
     && cd make-4.3 \
-    && ./configure \
+    && ./configure --host=x86_64-linux-gnu \
     && make \
     && sudo make install \
     && cd .. \
     && rm -rf make-4.3*
 
-# Readline 8.1
+# Readline 8.1 (x86_64 compatible)
 RUN wget https://ftp.gnu.org/gnu/readline/readline-8.1.tar.gz \
     && tar -xzvf readline-8.1.tar.gz \
     && cd readline-8.1 \
-    && ./configure --enable-shared \
+    && ./configure --enable-shared --host=x86_64-linux-gnu \
     && make \
     && sudo make install \
     && sudo ldconfig \
