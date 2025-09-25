@@ -39,6 +39,9 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
     pkg-config \
     cppcheck \
     clangd \
+    man-db \
+    manpages-dev \
+    manpages-posix-dev \
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
 # Set up compiler aliases
@@ -123,3 +126,32 @@ WORKDIR /app
 
 # Add .specstory/ to .gitignore if not already present, then start zsh
 CMD ["/bin/bash", "-c", "grep -q '.specstory/' .gitignore || echo '.specstory/' >> .gitignore; exec /bin/zsh"]
+
+# Configure GDB with enhanced settings
+RUN echo '# GDB Dashboard configuration' > ~/.gdbinit && \
+    echo 'set disassembly-flavor intel' >> ~/.gdbinit && \
+    echo 'set print pretty on' >> ~/.gdbinit && \
+    echo 'set print array on' >> ~/.gdbinit && \
+    echo 'set print array-indexes on' >> ~/.gdbinit && \
+    echo 'set history save on' >> ~/.gdbinit && \
+    echo 'set history size 10000' >> ~/.gdbinit && \
+    echo 'set history filename ~/.gdb_history' >> ~/.gdbinit && \
+    echo '' >> ~/.gdbinit && \
+    echo '# Better debugging experience' >> ~/.gdbinit && \
+    echo 'set pagination off' >> ~/.gdbinit && \
+    echo 'set confirm off' >> ~/.gdbinit && \
+    echo 'set verbose off' >> ~/.gdbinit && \
+    echo '' >> ~/.gdbinit && \
+    echo '# Custom commands' >> ~/.gdbinit && \
+    echo 'define hook-stop' >> ~/.gdbinit && \
+    echo '    info registers' >> ~/.gdbinit && \
+    echo '    x/10i $pc' >> ~/.gdbinit && \
+    echo '    info locals' >> ~/.gdbinit && \
+    echo '    backtrace 3' >> ~/.gdbinit && \
+    echo 'end' >> ~/.gdbinit && \
+    echo '' >> ~/.gdbinit && \
+    echo '# Useful aliases' >> ~/.gdbinit && \
+    echo 'alias -a xi = x/10i' >> ~/.gdbinit && \
+    echo 'alias -a xc = x/32c' >> ~/.gdbinit && \
+    echo 'alias -a xs = x/8s' >> ~/.gdbinit && \
+    echo 'alias -a xw = x/8wx' >> ~/.gdbinit
