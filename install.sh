@@ -204,36 +204,7 @@ fi
 # Setup .devcontainer
 info "Setting up .devcontainer..."
 mkdir -p .devcontainer
-cat > .devcontainer/devcontainer.json << 'EOF'
-{
-  "name": "42-Docker-DevEnv",
-  "image": "42-dev-env:latest",
-  "runArgs": ["--privileged"],
-  "containerEnv": { "WAKATIME_API_KEY": "${localEnv:WAKATIME_API_KEY}" },
-  "customizations": {
-    "vscode": {
-      "settings": {
-        "terminal.integrated.shell.linux": "/bin/zsh",
-        "[c]": { "editor.defaultFormatter": "keyhr.42-c-format" },
-        "editor.formatOnSave": false
-      },
-      "extensions": [
-        "ms-vscode.cpptools-extension-pack", "github.copilot",
-        "vadimcn.vscode-lldb", "eamodio.gitlens", "keyhr.42-c-format",
-        "WakaTime.vscode-wakatime", "llvm-vs-code-extensions.vscode-clangd"
-      ]
-    }
-  },
-  "mounts": [
-    "source=${env:HOME}/.ssh,target=/root/.ssh,type=bind,consistency=cached",
-    "source=${env:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached",
-    "source=p10k_config,target=/root/.p10k_persistent,type=volume"
-  ],
-  "postCreateCommand": "if [ -f /root/.p10k_persistent/.p10k.zsh ]; then cp /root/.p10k_persistent/.p10k.zsh /root/.p10k.zsh; fi && bash .devcontainer/setup-gdb.sh"
-}
-EOF
 
-curl -fsSL "$GDB_SETUP_URL" -o .devcontainer/setup-gdb.sh 2>/dev/null || true
-curl -fsSL "$GDB_HELP_URL" -o .devcontainer/GDB_Help.md 2>/dev/null || true
-
-info "Setup complete! Run 'dev' to start. After running 'p10k configure', use 'dev save-p10k' to save your settings."
+curl -fsSL https://raw.githubusercontent.com/hamza-salihovic/docker_setup/refs/heads/main/devcontainer.json -o .devcontainer/devcontainer.json
+curl -fsSL https://raw.githubusercontent.com/hamza-salihovic/docker_setup/refs/heads/main/setup-gdb.sh -o .devcontainer/setup-gdb.sh
+curl -fsSL https://raw.githubusercontent.com/hamza-salihovic/docker_setup/refs/heads/main/GDB_Help.md -o .devcontainer/GDB_Help.md
