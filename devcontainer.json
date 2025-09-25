@@ -1,9 +1,7 @@
 {
 	"name": "42-Docker-DevEnv",
-	"build": {
-		"dockerfile": "Dockerfile"
-	},
-	"runArgs": ["--privileged"],
+    "image": "42-dev-env:latest",
+    "runArgs": ["--privileged"],
 	"containerEnv": {
 	"WAKATIME_API_KEY": "${localEnv:WAKATIME_API_KEY}"
 	},
