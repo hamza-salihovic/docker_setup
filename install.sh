@@ -98,6 +98,19 @@ RUN apt-get update && apt-get install -y \
     clang-format \
     && apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
+# --- INSERT THE NEW SNIPPET HERE ---
+
+# Add Neovim PPA and install latest stable version
+RUN add-apt-repository ppa:neovim-ppa/stable -y \
+    && apt-get update && apt-get install -y neovim
+
+# Install Powerlevel10k theme for Oh My Zsh
+RUN git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k \
+    && echo 'source ~/.oh-my-zsh/custom/themes/powerlevel10k/powerlevel10k.zsh-theme' >>~/.zshrc \
+    && sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="powerlevel10k\/powerlevel10k"/' ~/.zshrc
+
+# --- END OF NEW SNIPPET ---
+
 # Set up compiler aliases
 RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-12 100 \
     && update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-12 100 \
