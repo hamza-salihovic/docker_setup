@@ -51,5 +51,5 @@
 		"source=${env:HOME}/.gitconfig,target=/root/.gitconfig,type=bind,consistency=cached",
 		"source=${env:HOME}/.zshrc,target=/root/.zshrc,type=bind,consistency=cached"
 	],
-	"postCreateCommand": "bash .devcontainer/setup-gdb.sh"
+	"postCreateCommand": "bash .devcontainer/setup-gdb.sh && bash .devcontainer/setup-shell.sh"
 }
