@@ -3,7 +3,8 @@
 	"image": "42-dev-env:latest",
 	
 	"containerEnv": {
-		"WAKATIME_API_KEY": "${localEnv:WAKATIME_API_KEY}"
+		"WAKATIME_API_KEY": "${localEnv:WAKATIME_API_KEY}",
+		"SSH_AUTH_SOCK": "/ssh-agent"
 	},
 	
 	"customizations": {
@@ -13,10 +14,17 @@
 				"[c]": {
 					"editor.defaultFormatter": "keyhr.42-c-format"
 				},
-				"editor.formatOnSave": false
+				"editor.formatOnSave": false,
+				"C_Cpp.intelliSenseEngine": "disabled",
+				"clangd.arguments": [
+					"--header-insertion=never",
+					"--compile-commands-dir=${workspaceFolder}"
+				],
+				"files.associations": {
+					"*.h": "c"
+				}
 			},
 			"extensions": [
-				"ms-vscode.cpptools-extension-pack",              // C/C++ expansion
 				"ms-python.python",
 				"github.copilot",
 				"vadimcn.vscode-lldb",                            // Improved debugger features
@@ -35,7 +43,6 @@
 				"WakaTime.vscode-wakatime",                       // WakaTime time tracking extension
 				"saoudrizwan.claude-dev",                         // claude
 				"streetsidesoftware.code-spell-checker",          // spell checker
-				"ms-vscode.vscode-websearchforcopilot",           // websearch for copilot
 				"ms-vscode.cpptools-themes",                      // themes
 				"aaron-bond.better-comments",                     // Better Comments
 				"specstory.specstory-vscode",                     // Save, export, search and share AI chat history from GitHub Copilot and Cursor
@@ -48,11 +55,13 @@
 	},
 	
 	"mounts": [
-		"source=devcontainer-ssh,target=/root/.ssh,type=volume",
 		"source=p10k-config,target=/root/.p10k_persistent,type=volume",
 		"source=gdb-history,target=/root/.gdb_history_dir,type=volume",
-		"type=bind,source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,readonly"
+		"type=bind,source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,readonly",
+		"source=/run/host-services/ssh-auth.sock,target=/ssh-agent,type=bind"
 	],
 	
-	"postCreateCommand": "[ -f /root/.p10k_persistent/.p10k.zsh ] && cp /root/.p10k_persistent/.p10k.zsh /root/.p10k.zsh || true"
+	"postCreateCommand": "[ -f /root/.p10k_persistent/.p10k.zsh ] && cp /root/.p10k_persistent/.p10k.zsh /root/.p10k.zsh || true",
+	"postStartCommand": "ssh-add -l 2>/dev/null && echo '✓ SSH agent connected' || echo '⚠ SSH agent not available'"
 }
+
