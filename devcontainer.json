@@ -6,7 +6,6 @@
 		"WAKATIME_API_KEY": "${localEnv:WAKATIME_API_KEY}",
 		"SSH_AUTH_SOCK": "/ssh-agent"
 	},
-	
 	"customizations": {
 		"vscode": {
 			"settings": {
@@ -15,11 +14,18 @@
 					"editor.defaultFormatter": "keyhr.42-c-format"
 				},
 				"editor.formatOnSave": false,
+				
+				// ✅ FIX: Disable Microsoft IntelliSense (prevents conflict with clangd)
 				"C_Cpp.intelliSenseEngine": "disabled",
+				
+				// ✅ Configure clangd for better C++ support
 				"clangd.arguments": [
 					"--header-insertion=never",
-					"--compile-commands-dir=${workspaceFolder}"
+					"--compile-commands-dir=${workspaceFolder}",
+					"--background-index",
+					"--clang-tidy"
 				],
+				// ✅ Force .h files to be treated as C (not C++)
 				"files.associations": {
 					"*.h": "c"
 				}
@@ -64,4 +70,3 @@
 	"postCreateCommand": "[ -f /root/.p10k_persistent/.p10k.zsh ] && cp /root/.p10k_persistent/.p10k.zsh /root/.p10k.zsh || true",
 	"postStartCommand": "ssh-add -l 2>/dev/null && echo '✓ SSH agent connected' || echo '⚠ SSH agent not available'"
 }
-
