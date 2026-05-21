@@ -64,7 +64,8 @@
     "mounts": [
         "source=p10k-config,target=/root/.p10k_persistent,type=volume",
         "source=gdb-history,target=/root/.gdb_history_dir,type=volume",
-        "type=bind,source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,readonly"
+        "type=bind,source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,readonly",
+        "type=bind,source=${localEnv:HOME}/.ssh,target=/root/.ssh,readonly"
     ],
     
     "postCreateCommand": "[ -f /root/.p10k_persistent/.p10k.zsh ] && cp /root/.p10k_persistent/.p10k.zsh /root/.p10k.zsh || true",
