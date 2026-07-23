@@ -1,75 +1,60 @@
+// Example: C/C++ project on devbase.
+// Copy to <your-project>/.devcontainer/devcontainer.json and adjust "name".
 {
-	"name": "42-Docker-DevEnv",
-	"image": "42-dev-env:latest",
-	
+	"name": "my-cpp-project",
+	"image": "devbase:1.0.0",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces,type=bind",
+	"workspaceFolder": "/workspaces",
+	"remoteUser": "dev",
+	"updateRemoteUserUID": true,
+	"postCreateCommand": "devbase-init",
 	"containerEnv": {
+		"ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+		"ANTHROPIC_BASE_URL": "${localEnv:ANTHROPIC_BASE_URL}",
+		"BRAVE_API_KEY": "${localEnv:BRAVE_API_KEY}",
+		"GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+		"KILO_API_KEY": "${localEnv:KILO_API_KEY}",
+		"ONEPROVIDER_API_KEY": "${localEnv:ONEPROVIDER_API_KEY}",
+		"OPENCLAW_GATEWAY_TOKEN": "${localEnv:OPENCLAW_GATEWAY_TOKEN}",
 		"WAKATIME_API_KEY": "${localEnv:WAKATIME_API_KEY}",
+		"ZED_OPEN_AI_COMPATIBLE_EDIT_PREDICTION_API_KEY": "${localEnv:ZED_OPEN_AI_COMPATIBLE_EDIT_PREDICTION_API_KEY}"
 	},
+	"mounts": [
+		// Core volumes — always keep all five.
+		"source=devbase-commandhistory,target=/commandhistory,type=volume",
+		"source=devbase-config,target=/home/dev/.devbase,type=volume",
+		"source=devbase-vscode-server,target=/home/dev/.vscode-server,type=volume",
+		"source=devbase-data,target=/home/dev/data,type=volume",
+		"source=devbase-omp,target=/home/dev/.omp,type=volume"
+	],
 	"customizations": {
 		"vscode": {
-			"settings": {
-				"terminal.integrated.defaultProfile.linux": "zsh",
-				"[c]": {
-					"editor.defaultFormatter": "keyhr.42-c-format"
-				},
-				"editor.formatOnSave": false,
-				
-				// ✅ FIX: Disable Microsoft IntelliSense (prevents conflict with clangd)
-				"C_Cpp.intelliSenseEngine": "disabled",
-				
-				// ✅ Configure clangd for better C++ support
-				"clangd.arguments": [
-					"--header-insertion=never",
-					"--compile-commands-dir=${workspaceFolder}",
-					"--background-index",
-					"--clang-tidy"
-				],
-				// ✅ Force .h files to be treated as C (not C++)
-				"files.associations": {
-					"*.h": "c"
-				}
-			},
+			// Project-specific extensions go above.
 			"extensions": [
-				"ms-python.python",
-				"google.gemini-cli-vscode-ide-companion",
-				"google.geminicodeassist",
-				"github.copilot",
-				"vadimcn.vscode-lldb",                            // Improved debugger features
-				"eamodio.gitlens",                                // Powerful git UI and visualizations
-				"bbenoist.togglehs",                              // F4 to jump between header and source files
-				"ms-vscode.makefile-tools",                       // IntelliSense for Makefile
-				"timonwong.shellcheck",                           // Linter for Shell scripts
-				"esbenp.prettier-vscode",                         // Code formatter for Markdown, YAML and more
-				"kube.42header",                                  // Ctrl + Alt + H to insert 42 Header
-				"DoKca.42-ft-count-line",                         // Display function line count
-				"ms-vsliveshare.vsliveshare",                     // Real-time collaboration
-				"dqisme.sync-scroll",                             // Scroll multiple editors simultaneously
-				"uctakeoff.vscode-counter",                       // Count lines of code
-				"tomoki1207.pdf",                                 // Display PDF files in VS Code
-				"keyhr.42-c-format",                              // 42 Format
-				"WakaTime.vscode-wakatime",                       // WakaTime time tracking extension
-				"saoudrizwan.claude-dev",                         // claude
-				"streetsidesoftware.code-spell-checker",          // spell checker
-				"ms-vscode.cpptools-themes",                      // themes
-				"aaron-bond.better-comments",                     // Better Comments
-				"specstory.specstory-vscode",                     // Save, export, search and share AI chat history from GitHub Copilot and Cursor
-				"ms-python.vscode-pylance",
-				"kilocode.kilo-code",
-				"llvm-vs-code-extensions.vscode-clangd",          // language server for C/C++
-				"alpha912.codebase-md"                            // codebase as markdown
-			]
+				"ms-vscode.cpptools",
+				"ms-vscode.cpptools-extension-pack",
+				"llvm-vs-code-extensions.vscode-clangd",
+				"ms-vscode.makefile-tools"
+			],
+			"settings": {
+				// clangd requires a compile_commands.json file.
+				// Generate it by running: bear -- make
+				"C_Cpp.intelliSenseEngine": "disabled",
+				"clangd.arguments": [
+					"--background-index",
+					"--clang-tidy",
+					"--header-insertion=iwyu"
+				],
+				"files.associations": {
+					"*.h": "c",
+					"*.hpp": "cpp",
+					"*.cc": "cpp",
+					"*.cxx": "cpp"
+				},
+				// Dialed back to c++98 to match strict campus grading requirements
+				"C_Cpp.default.cppStandard": "c++98",
+				"C_Cpp.default.cStandard": "c99"
+			}
 		}
-	},
-	
-    "mounts": [
-        "source=p10k-config,target=/root/.p10k_persistent,type=volume",
-        "source=gdb-history,target=/root/.gdb_history_dir,type=volume",
-        "type=bind,source=${localEnv:HOME}/.gitconfig,target=/root/.gitconfig,readonly",
-        "type=bind,source=${localEnv:HOME}/.ssh,target=/root/.ssh,readonly"
-    ],
-    
-    "postCreateCommand": "[ -f /root/.p10k_persistent/.p10k.zsh ] && cp /root/.p10k_persistent/.p10k.zsh /root/.p10k.zsh || true",
-    
-    // ✅ Updated command to point to the new simplified socket path
-    "postStartCommand": "[ -f /root/.p10k_persistent/.p10k.zsh ] && cp /root/.p10k_persistent/.p10k.zsh /root/.p10k.zsh || true; ssh-add -l 2>/dev/null && echo '✓ SSH agent connected' || echo '⚠ SSH agent not available'"
+	}
 }
