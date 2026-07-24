@@ -3,12 +3,11 @@
 {
 	"name": "my-cpp-project",
 	"image": "devbase:1.0.0",
-	"workspaceMount": "source=${localWorkspaceFolder},target=/workspaces,type=bind",
-	"workspaceFolder": "/workspaces",
 	"remoteUser": "dev",
 	"updateRemoteUserUID": true,
 	"postCreateCommand": "devbase-init",
 	"containerEnv": {
+		"SSH_AUTH_SOCK": "/run/host-services/ssh-auth.sock",
 		"ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
 		"ANTHROPIC_BASE_URL": "${localEnv:ANTHROPIC_BASE_URL}",
 		"BRAVE_API_KEY": "${localEnv:BRAVE_API_KEY}",
@@ -25,7 +24,9 @@
 		"source=devbase-config,target=/home/dev/.devbase,type=volume",
 		"source=devbase-vscode-server,target=/home/dev/.vscode-server,type=volume",
 		"source=devbase-data,target=/home/dev/data,type=volume",
-		"source=devbase-omp,target=/home/dev/.omp,type=volume"
+		"source=devbase-omp,target=/home/dev/.omp,type=volume",
+		// OrbStack / Docker Desktop host ssh-agent (1Password).
+		"source=/run/host-services/ssh-auth.sock,target=/run/host-services/ssh-auth.sock,type=bind"
 	],
 	"customizations": {
 		"vscode": {
